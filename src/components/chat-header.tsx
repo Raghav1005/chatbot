@@ -5,16 +5,24 @@ import { Button } from "@/components/ui/button"
 import { ModelSelector } from "./model-selector"
 import { MessageSquare, Plus, Moon, Sun } from "lucide-react"
 import { useTheme } from "next-themes"
+import { ChevronDown } from "lucide-react"
 
 interface ChatHeaderProps {
   selectedModel: string
   onModelChange: (model: string) => void
   onNewChat: () => void
+  onLoadHistory?: () => void
 }
 
-export const ChatHeader = React.memo(function ChatHeader({ selectedModel, onModelChange, onNewChat }: ChatHeaderProps) {
+export const ChatHeader = React.memo(function ChatHeader({ selectedModel, onModelChange, onNewChat, onLoadHistory }: ChatHeaderProps) {
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = React.useState(false)
+  const [openProviders, setOpenProviders] = React.useState(false)
+
+  const providers = [
+    { id: "openai/gpt-oss-20b:free", label: "ChatGPT (gpt-oss-20b)" },
+    { id: "nvidia/nemotron-nano-9b-v2:free", label: "NVIDIA Nemotron 9B V2" },
+  ]
 
   React.useEffect(() => {
     setMounted(true)
@@ -36,6 +44,30 @@ export const ChatHeader = React.memo(function ChatHeader({ selectedModel, onMode
           </div>
 
           <div className="flex items-center gap-2 md:gap-4">
+            <div className="relative">
+              <Button variant="ghost" size="sm" onClick={() => setOpenProviders((s) => !s)} className="h-9 w-auto p-2 gap-2">
+                Providers
+                <ChevronDown className="h-4 w-4" />
+              </Button>
+              {openProviders && (
+                <div className="absolute right-0 mt-2 w-56 rounded-md border bg-popover p-2 shadow-md z-50">
+                  {providers.map((p) => (
+                    <button
+                      key={p.id}
+                      className="w-full text-left px-2 py-2 hover:bg-muted/30 rounded text-sm"
+                      onClick={() => {
+                        onModelChange(p.id)
+                        setOpenProviders(false)
+                        // load history for that model
+                        onLoadHistory?.()
+                      }}
+                    >
+                      {p.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
             <div className="hidden sm:block">
               <ModelSelector selectedModel={selectedModel} onModelChange={onModelChange} />
             </div>
@@ -52,10 +84,15 @@ export const ChatHeader = React.memo(function ChatHeader({ selectedModel, onMode
               </Button>
             )}
 
-            <Button variant="outline" size="sm" onClick={onNewChat} className="gap-2 bg-transparent hover:bg-muted/50">
-              <Plus className="h-4 w-4" />
-              <span className="hidden sm:inline">New Chat</span>
-            </Button>
+            <div className="hidden sm:flex items-center gap-2">
+              <Button variant="ghost" size="sm" onClick={() => onLoadHistory?.()} className="gap-2">
+                <span className="hidden sm:inline">History</span>
+              </Button>
+              <Button variant="outline" size="sm" onClick={onNewChat} className="gap-2 bg-transparent hover:bg-muted/50">
+                <Plus className="h-4 w-4" />
+                <span className="hidden sm:inline">New Chat</span>
+              </Button>
+            </div>
           </div>
         </div>
 

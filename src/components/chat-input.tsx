@@ -1,56 +1,61 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
-import { Send, Square } from "lucide-react"
+import * as React from "react";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Send, Square } from "lucide-react";
 
 interface ChatInputProps {
-  input: string
-  setInput: (value: string) => void
-  onSubmit: (e: React.FormEvent) => void
-  isLoading: boolean
+  input: string;
+  setInput: (value: string) => void;
+  onSubmit: (e: React.FormEvent) => void;
+  isLoading: boolean;
 }
 
-export const ChatInput = React.memo(function ChatInput({ input, setInput, onSubmit, isLoading }: ChatInputProps) {
-  const textareaRef = React.useRef<HTMLTextAreaElement>(null)
+export const ChatInput = React.memo(function ChatInput({
+  input,
+  setInput,
+  onSubmit,
+  isLoading,
+}: ChatInputProps) {
+  const textareaRef = React.useRef<HTMLTextAreaElement>(null);
 
   React.useEffect(() => {
-    const textarea = textareaRef.current
+    const textarea = textareaRef.current;
     if (textarea) {
-      textarea.style.height = "auto"
-      textarea.style.height = `${Math.min(textarea.scrollHeight, 200)}px`
+      textarea.style.height = "auto";
+      textarea.style.height = `${Math.min(textarea.scrollHeight, 200)}px`;
     }
-  }, [input])
+  }, [input]);
 
   const handleKeyDown = React.useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
       if (e.key === "Enter" && !e.shiftKey) {
-        e.preventDefault()
+        e.preventDefault();
         if (input.trim() && !isLoading) {
-          onSubmit(e)
+          onSubmit(e);
         }
       }
     },
-    [input, isLoading, onSubmit],
-  )
+    [input, isLoading, onSubmit]
+  );
 
   const handleSubmit = React.useCallback(
     (e: React.FormEvent) => {
-      e.preventDefault()
+      e.preventDefault();
       if (input.trim() && !isLoading) {
-        onSubmit(e)
+        onSubmit(e);
       }
     },
-    [input, isLoading, onSubmit],
-  )
+    [input, isLoading, onSubmit]
+  );
 
   const handleInputChange = React.useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-      setInput(e.target.value)
+      setInput(e.target.value);
     },
-    [setInput],
-  )
+    [setInput]
+  );
 
   return (
     <div className="border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -63,7 +68,9 @@ export const ChatInput = React.memo(function ChatInput({ input, setInput, onSubm
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
               placeholder={
-                isLoading ? "AI is thinking..." : "Type your message here... (Enter to send, Shift+Enter for new line)"
+                isLoading
+                  ? "AI is thinking..."
+                  : "Type your message here... (Enter to send, Shift+Enter for new line)"
               }
               className="min-h-[60px] max-h-[200px] resize-none transition-all duration-200"
               disabled={isLoading}
@@ -86,5 +93,5 @@ export const ChatInput = React.memo(function ChatInput({ input, setInput, onSubm
         </div>
       </div>
     </div>
-  )
-})
+  );
+});

@@ -1,63 +1,60 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { cn } from "@/lib/utils"
-import { Bot, User, Copy, Check } from "lucide-react"
-import ReactMarkdown from "react-markdown"
-import { Button } from "@/components/ui/button"
-import { useToast } from "@/hooks/use-toast"
+import * as React from "react";
+import { cn } from "@/lib/utils";
+import { Bot, User, Copy, Check } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 
 interface ChatMessageProps {
   message: {
-    id: string
-    role: "user" | "assistant"
+    id: string;
+    role: "user" | "assistant";
     parts: Array<{
-      type: "text"
-      text: string
-    }>
-  }
+      type: "text";
+      text: string;
+    }>;
+  };
 }
 
 export const ChatMessage = React.memo(function ChatMessage({ message }: ChatMessageProps) {
-  const [copied, setCopied] = React.useState(false)
-  const { toast } = useToast()
-  const isUser = message.role === "user"
+  const [copied, setCopied] = React.useState(false);
+  const { toast } = useToast();
+  const isUser = message.role === "user";
 
   const content = message.parts
     .filter((part) => part.type === "text")
     .map((part) => part.text)
-    .join("")
+    .join("");
 
   const handleCopy = React.useCallback(async () => {
     try {
-      await navigator.clipboard.writeText(content)
-      setCopied(true)
-      toast({
-        title: "Copied!",
-        description: "Message copied to clipboard",
-      })
-      setTimeout(() => setCopied(false), 2000)
+      await navigator.clipboard.writeText(content);
+      setCopied(true);
+      toast({ title: "Copied!", description: "Message copied to clipboard" });
+      setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-      console.error("[v0] Failed to copy:", err)
+      console.error("[v0] Failed to copy:", err);
       toast({
         title: "Failed to copy",
         description: "Could not copy message to clipboard",
         variant: "destructive",
-      })
+      });
     }
-  }, [content, toast])
+  }, [content, toast]);
 
   return (
     <div
       className={cn(
         "group relative flex w-full gap-4 p-4 transition-colors hover:bg-muted/20",
-        isUser ? "bg-background" : "bg-muted/30",
+        isUser ? "bg-background" : "bg-muted/30"
       )}
     >
       <div
         className={cn(
           "flex h-8 w-8 shrink-0 select-none items-center justify-center rounded-md transition-colors",
-          isUser ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground",
+          isUser ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground"
         )}
       >
         {isUser ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
@@ -72,20 +69,17 @@ export const ChatMessage = React.memo(function ChatMessage({ message }: ChatMess
               components={{
                 p: ({ children }) => <p className="mb-2 last:mb-0 leading-relaxed">{children}</p>,
                 code: ({ children, className }) => {
-                  const isInline = !className
+                  const isInline = !className;
                   return isInline ? (
-                    <code className="rounded bg-muted px-1.5 py-0.5 text-sm font-mono text-foreground">{children}</code>
+                    <code className="rounded bg-muted px-1.5 py-0.5 text-sm font-mono text-foreground">
+                      {children}
+                    </code>
                   ) : (
                     <pre className="overflow-x-auto rounded-lg bg-muted p-4 my-4">
                       <code className="text-sm font-mono text-foreground">{children}</code>
                     </pre>
-                  )
+                  );
                 },
-                ul: ({ children }) => <ul className="list-disc list-inside space-y-1 my-2">{children}</ul>,
-                ol: ({ children }) => <ol className="list-decimal list-inside space-y-1 my-2">{children}</ol>,
-                blockquote: ({ children }) => (
-                  <blockquote className="border-l-4 border-muted-foreground/20 pl-4 italic my-4">{children}</blockquote>
-                ),
               }}
             >
               {content}
@@ -100,5 +94,5 @@ export const ChatMessage = React.memo(function ChatMessage({ message }: ChatMess
         </Button>
       </div>
     </div>
-  )
-})
+  );
+});

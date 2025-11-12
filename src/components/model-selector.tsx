@@ -10,34 +10,6 @@ interface ModelSelectorProps {
 
 const models = [
   {
-    id: "x-ai/grok-4-fast:free",
-    name: "xAI: Grok 4 Fast",
-    provider: "x-ai",
-    description: "Grok 4 Fast is xAI's latest multimodal model with SOTA cost-efficiency and a 2M token context window.",
-    tier: "free",
-  },
-  {
-    id: "nvidia/nemotron-nano-9b-v2:free",
-    name: "NVIDIA: Nemotron Nano 9B V2",
-    provider: "NVIDIA",
-    description: "A large LLM trained from scratch by NVIDIA, designed for both reasoning and non-reasoning tasks.",
-    tier: "free",
-  },
-  {
-    id: "deepseek/deepseek-v3-1:free",
-    name: "DeepSeek: DeepSeek V3.1",
-    provider: "DeepSeek",
-    description: "Large hybrid reasoning model (671B parameters, 37B active) supporting both thinking and non-thinking modes.",
-    tier: "free",
-  },
-  {
-    id: "openai/gpt-oss-120b:free",
-    name: "OpenAI: gpt-oss-120b",
-    provider: "OpenAI",
-    description: "Open-weight 117B-parameter MoE model designed for high-reasoning, agentic, and general-purpose use cases.",
-    tier: "free",
-  },
-  {
     id: "openai/gpt-oss-20b:free",
     name: "OpenAI: gpt-oss-20b",
     provider: "OpenAI",
@@ -45,10 +17,10 @@ const models = [
     tier: "free",
   },
   {
-    id: "z-ai/glm-4-5-air:free",
-    name: "Z.AI: GLM 4.5 Air",
-    provider: "Z.AI",
-    description: "Lightweight variant of flagship GLM model family, optimized for fast inference and free access.",
+    id: "nvidia/nemotron-nano-9b-v2:free",
+    name: "NVIDIA: Nemotron Nano 9B V2",
+    provider: "NVIDIA",
+    description: "A large LLM trained from scratch by NVIDIA, designed for both reasoning and non-reasoning tasks.",
     tier: "free",
   },
 ];

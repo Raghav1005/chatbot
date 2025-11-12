@@ -1,120 +1,119 @@
 "use client";
 
-import { useState, useEffect, useRef, FormEvent } from "react";
-import { ChatHeader } from "@/components/chat-header";
-import { ChatMessage } from "@/components/chat-message";
+import { useState } from "react";
 import { ChatInput } from "@/components/chat-input";
+import { ChatMessage } from "@/components/chat-message";
+import { Loader2 } from "lucide-react";
+import { ChatHeader } from "@/components/chat-header";
 import { ChatWelcome } from "@/components/chat-welcome";
-import { ChatLoading } from "@/components/chat-loading";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { useToast } from "@/hooks/use-toast";
 
-type ChatPart = { type: "text"; text: string };
-
-type Message = {
-  id: string;
-  role: "user" | "assistant";
-  parts: ChatPart[];
-};
-
-export default function ChatPage() {
-  const [messages, setMessages] = useState<Message[]>([]);
+export default function Page() {
+  const [messages, setMessages] = useState<any[]>([]);
   const [input, setInput] = useState("");
-  const [selectedModel, setSelectedModel] = useState("x-ai/grok-4-fast:free");
   const [isLoading, setIsLoading] = useState(false);
-  const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const [selectedModel, setSelectedModel] = useState("openai/gpt-oss-20b:free");
 
-  // Auto-scroll
-  useEffect(() => {
-    if (scrollAreaRef.current) {
-      const scrollContainer = scrollAreaRef.current.querySelector(
-        "[data-radix-scroll-area-viewport]"
-      );
-      if (scrollContainer) {
-        scrollContainer.scrollTo({
-          top: scrollContainer.scrollHeight,
-          behavior: "smooth",
-        });
+  const userId = "demoUser"; // Replace with real user later
+
+  const { toast } = useToast();
+
+  // History is loaded on-demand via header button
+  const handleLoadHistory = async () => {
+    try {
+      const res = await fetch(`/api/chat?userId=${userId}&model=${encodeURIComponent(selectedModel)}`);
+      const data = await res.json();
+      if (data.ok && data.messages) {
+        const mapped = data.messages.map((msg: any, i: number) => ({
+          id: String(i),
+          role: msg.role,
+          parts: [{ type: "text", text: msg.content }],
+        }));
+        setMessages(mapped);
+      } else {
+        toast({ title: "No history", description: data.error || "No messages found for this model" });
       }
+    } catch (err: any) {
+      console.error("Error loading history:", err);
+      toast({ title: "Failed to load history", description: err?.message || String(err), variant: "destructive" });
     }
-  }, [messages, isLoading]);
+  };
 
-  const handleNewChat = () => setMessages([]);
-  const handleModelChange = (model: string) => setSelectedModel(model);
-
-  const handleSubmit = async (e: FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
 
-    // Add user message
-    const userMessage: Message = {
-      id: crypto.randomUUID(),
+    const newMessage = {
+      id: Date.now().toString(),
       role: "user",
       parts: [{ type: "text", text: input }],
     };
-    const updatedMessages = [...messages, userMessage];
+
+    const updatedMessages = [...messages, newMessage];
     setMessages(updatedMessages);
     setInput("");
     setIsLoading(true);
 
     try {
-      const response = await fetch("/api/chat", {
+      const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          messages: updatedMessages,
-          model: selectedModel,
-        }),
+        body: JSON.stringify({ userId, messages: updatedMessages, model: selectedModel }),
       });
 
-      if (!response.ok) throw new Error("Failed to fetch response");
+      const data = await res.json();
 
-      const data = await response.json();
-
-      // Convert API response to Message format
-      const assistantMessage: Message = {
-        id: crypto.randomUUID(),
-        role: "assistant",
-        parts: [{ type: "text", text: data.message?.content || data.message || "No response" }],
-      };
-
-      setMessages((prev) => [...prev, assistantMessage]);
-    } catch (err) {
-      console.error(err);
+      if (data.ok && data.message) {
+        // Append only the assistant's latest reply to avoid loading the entire saved history into the UI
+        const assistant = data.message;
+        const assistantMsg = {
+          id: Date.now().toString(),
+          role: assistant.role || "assistant",
+          parts: [{ type: "text", text: assistant.content || String(assistant) }],
+        };
+        setMessages((prev) => [...prev, assistantMsg]);
+      } else {
+        // Model returned an error. Keep the local conversation (no heavy history injection) and show a toast.
+        toast({ title: "Model error", description: data.error || "Model call failed", variant: "destructive" });
+        // leave messages as-is (the user's message is already shown)
+      }
+    } catch (error) {
+      console.error("\u274c Error sending message:", error);
     } finally {
       setIsLoading(false);
     }
   };
 
+  const handleNewChat = () => {
+    setMessages([]);
+  };
+
   return (
-    <div className="flex h-screen flex-col bg-background">
-      <ChatHeader
-        selectedModel={selectedModel}
-        onModelChange={handleModelChange}
-        onNewChat={handleNewChat}
-      />
+    <div className="flex flex-col h-screen bg-background">
+  <ChatHeader selectedModel={selectedModel} onModelChange={setSelectedModel} onNewChat={handleNewChat} onLoadHistory={handleLoadHistory} />
 
-      <div className="flex flex-1 flex-col">
-        <ScrollArea ref={scrollAreaRef} className="flex-1">
-          <div className="flex flex-col overflow-x-auto">
-            {messages.length === 0 && <ChatWelcome />}
-            {messages.map((message) => (
-              <ChatMessage key={message.id} message={message} />
-            ))}
-            {isLoading && (
-              <div className="px-4 py-2 text-muted-foreground">
-                <ChatLoading />
-              </div>
-            )}
+      <div className="flex-1 overflow-y-auto px-4 py-6">
+        {messages.length === 0 && !isLoading && (
+          <ChatWelcome onExampleClick={(example) => setInput(example)} />
+        )}
+
+        {messages.map((msg) => (
+          <ChatMessage key={msg.id} message={msg} />
+        ))}
+
+        {isLoading && (
+          <div className="flex justify-center mt-4 text-muted-foreground">
+            <Loader2 className="animate-spin mr-2 h-4 w-4" /> Thinking...
           </div>
-        </ScrollArea>
-
-        <ChatInput
-          input={input}
-          setInput={setInput}
-          onSubmit={handleSubmit}
-          isLoading={isLoading}
-        />
+        )}
       </div>
+
+      <ChatInput
+        input={input}
+        setInput={setInput}
+        onSubmit={handleSubmit}
+        isLoading={isLoading}
+      />
     </div>
   );
 }
