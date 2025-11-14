@@ -80,6 +80,8 @@ export async function POST(req: Request) {
 
     // Now call external model; if it fails return the saved chat
     try {
+      // Log the outgoing call for easier debugging in Vercel logs
+      console.log(`➡️ Calling model '${model}' with ${normalizedMessages.length} messages`);
       const client = getOpenAIClientForModel(model);
       const completion = await client.chat.completions.create({
         model,
@@ -98,7 +100,17 @@ export async function POST(req: Request) {
 
       return jsonResponse({ ok: true, message: assistantMessage, messages: chat.messages });
     } catch (err: any) {
-      console.error("❌ Error calling model, returning saved chat:", err?.message || err);
+      // Enhanced logging: if the client error contains an HTTP response, log status & body
+      try {
+        const status = err?.response?.status || err?.status || null;
+        const body = err?.response?.data || err?.body || null;
+        console.error("❌ Error calling model:", err?.message || err);
+        if (status) console.error("   provider status:", status);
+        if (body) console.error("   provider body:", JSON.stringify(body));
+      } catch (logErr) {
+        console.error("❌ Error while logging provider error:", logErr);
+      }
+
       return jsonResponse({ ok: false, error: err?.message || "Model call failed", messages: chat.messages }, 500);
     }
   } catch (error: any) {
